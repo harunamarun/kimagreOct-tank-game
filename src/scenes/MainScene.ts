@@ -2,6 +2,7 @@ import Phaser from "phaser";
 
 export default class MainScene extends Phaser.Scene {
   private blocks?: Phaser.Physics.Arcade.StaticGroup;
+  private player?: Phaser.Physics.Arcade.Sprite;
 
   constructor() {
     super("main");
@@ -10,6 +11,10 @@ export default class MainScene extends Phaser.Scene {
   preload() {
     this.load.image("ground", "assets/ground.png");
     this.load.image("block", "assets/block.png");
+    this.load.spritesheet("dude", "assets/dude.png", {
+      frameWidth: 32,
+      frameHeight: 48,
+    });
   }
   create() {
     /******************** set course ********************/
@@ -46,6 +51,29 @@ export default class MainScene extends Phaser.Scene {
       this.blocks.create(x + 280, 600 - 120, "block");
       x += 32;
     }
+
+    /******************** set player ********************/
+    this.player = this.physics.add.sprite(100, 300, "dude");
+
+    this.anims.create({
+      key: "left",
+      frames: this.anims.generateFrameNumbers("dude", { start: 0, end: 3 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "turn",
+      frames: [{ key: "dude", frame: 4 }],
+      frameRate: 20,
+    });
+    this.anims.create({
+      key: "right",
+      frames: this.anims.generateFrameNumbers("dude", { start: 5, end: 8 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+
+    this.physics.add.collider(this.player, this.blocks);
   }
 
   update() {}
