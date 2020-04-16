@@ -3,6 +3,7 @@ import Phaser from "phaser";
 export default class MainScene extends Phaser.Scene {
   private blocks?: Phaser.Physics.Arcade.StaticGroup;
   private player?: Phaser.Physics.Arcade.Sprite;
+  private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
 
   constructor() {
     super("main");
@@ -74,7 +75,29 @@ export default class MainScene extends Phaser.Scene {
     });
 
     this.physics.add.collider(this.player, this.blocks);
+
+    /******************** set cursors ********************/
+    this.cursors = this.input.keyboard.createCursorKeys();
   }
 
-  update() {}
+  update() {
+    if (!this.cursors) return;
+    if (this.cursors.left?.isDown) {
+      this.player?.setVelocityX(-180);
+      this.player?.anims.play("left", true);
+    } else if (this.cursors.right?.isDown) {
+      this.player?.setVelocityX(180);
+      this.player?.anims.play("right", true);
+    } else if (this.cursors.up?.isDown) {
+      this.player?.setVelocityY(-180);
+      this.player?.anims.play("turn");
+    } else if (this.cursors.down?.isDown) {
+      this.player?.setVelocityY(180);
+      this.player?.anims.play("turn");
+    } else {
+      this.player?.setVelocityX(0);
+      this.player?.setVelocityY(0);
+      this.player?.anims.play("turn");
+    }
+  }
 }
