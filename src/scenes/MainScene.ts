@@ -5,6 +5,8 @@ export default class MainScene extends Phaser.Scene {
   private player?: Phaser.Physics.Arcade.Sprite;
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
   private beams?: Phaser.Physics.Arcade.Group;
+  private computer?: Phaser.Physics.Arcade.Sprite;
+  private finishedGame = false;
 
   constructor() {
     super({
@@ -21,6 +23,7 @@ export default class MainScene extends Phaser.Scene {
     });
     this.load.image("beam", "assets/bomb.png");
   }
+
   create() {
     /******************** set course ********************/
     this.add.image(400, 300, "ground");
@@ -59,9 +62,15 @@ export default class MainScene extends Phaser.Scene {
 
     /******************** set player ********************/
     this.player = this.physics.add.sprite(100, 300, "dude");
-    this.setAnims();
+    this.setAnims("dude");
 
     this.physics.add.collider(this.player, this.blocks);
+
+    /******************** set computer ********************/
+    this.computer = this.physics.add.sprite(700, 300, "dude");
+    //this.setAnims("dude");
+
+    this.physics.add.collider(this.computer, this.blocks);
 
     /******************** set cursors ********************/
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -72,7 +81,14 @@ export default class MainScene extends Phaser.Scene {
     this.physics.add.collider(
       this.player,
       this.beams,
-      this.handleHitbeam,
+      this.handleHitbeamToPlayer,
+      undefined,
+      this
+    );
+    this.physics.add.collider(
+      this.computer,
+      this.beams,
+      this.handleHitbeamToCom,
       undefined,
       this
     );
@@ -83,64 +99,73 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /******************** FUNCTIONS ********************/
-  private setAnims() {
+  private setAnims(name: string) {
     this.anims.create({
       key: "left",
-      frames: this.anims.generateFrameNumbers("dude", { start: 0, end: 1 }),
+      frames: this.anims.generateFrameNumbers(name, { start: 0, end: 1 }),
       frameRate: 10,
       repeat: -1,
     });
     this.anims.create({
       key: "left-up",
-      frames: this.anims.generateFrameNumbers("dude", { start: 2, end: 3 }),
+      frames: this.anims.generateFrameNumbers(name, { start: 2, end: 3 }),
       frameRate: 10,
       repeat: -1,
     });
     this.anims.create({
       key: "up",
-      frames: this.anims.generateFrameNumbers("dude", { start: 4, end: 5 }),
+      frames: this.anims.generateFrameNumbers(name, { start: 4, end: 5 }),
       frameRate: 10,
       repeat: -1,
     });
     this.anims.create({
       key: "right-up",
-      frames: this.anims.generateFrameNumbers("dude", { start: 6, end: 7 }),
+      frames: this.anims.generateFrameNumbers(name, { start: 6, end: 7 }),
       frameRate: 10,
       repeat: -1,
     });
     this.anims.create({
       key: "right",
-      frames: this.anims.generateFrameNumbers("dude", { start: 8, end: 9 }),
+      frames: this.anims.generateFrameNumbers(name, { start: 8, end: 9 }),
       frameRate: 10,
       repeat: -1,
     });
     this.anims.create({
       key: "right-down",
-      frames: this.anims.generateFrameNumbers("dude", { start: 10, end: 11 }),
+      frames: this.anims.generateFrameNumbers(name, { start: 10, end: 11 }),
       frameRate: 10,
       repeat: -1,
     });
     this.anims.create({
       key: "down",
-      frames: this.anims.generateFrameNumbers("dude", { start: 12, end: 13 }),
+      frames: this.anims.generateFrameNumbers(name, { start: 12, end: 13 }),
       frameRate: 10,
       repeat: -1,
     });
     this.anims.create({
       key: "left-down",
-      frames: this.anims.generateFrameNumbers("dude", { start: 14, end: 15 }),
+      frames: this.anims.generateFrameNumbers(name, { start: 14, end: 15 }),
       frameRate: 10,
       repeat: -1,
     });
   }
-  private handleHitbeam(
+  private handleHitbeamToPlayer(
     player: Phaser.GameObjects.GameObject,
     b: Phaser.GameObjects.GameObject
   ) {
     this.physics.pause();
     this.player?.setTint(0x000000);
-    this.player?.anims.play("turn");
-    //    this.gameOver = true;
+    this.player?.anims.play("down");
+    this.finishedGame = true;
+  }
+  private handleHitbeamToCom(
+    computer: Phaser.GameObjects.GameObject,
+    b: Phaser.GameObjects.GameObject
+  ) {
+    this.physics.pause();
+    this.computer?.setTint(0x000000);
+    this.computer?.anims.play("down");
+    this.finishedGame = true;
   }
 
   private previousDownTime: number = 0;
