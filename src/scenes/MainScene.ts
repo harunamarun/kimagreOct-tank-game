@@ -68,7 +68,7 @@ export default class MainScene extends Phaser.Scene {
 
     /******************** set computer ********************/
     this.computer = this.physics.add.sprite(700, 300, "dude");
-    //this.setAnims("dude");
+    this.setAnims("dude");
 
     this.physics.add.collider(this.computer, this.blocks);
 
@@ -77,7 +77,13 @@ export default class MainScene extends Phaser.Scene {
 
     /******************** set beams ********************/
     this.beams = this.physics.add.group();
-    this.physics.add.collider(this.beams, this.blocks);
+    this.physics.add.collider(
+      this.beams,
+      this.blocks,
+      this.countBounce,
+      undefined,
+      this
+    );
     this.physics.add.collider(
       this.player,
       this.beams,
@@ -99,6 +105,15 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /******************** FUNCTIONS ********************/
+  private countBounce(obj1, obj2) {
+    let bounceCount: number = obj1.getData("bounce");
+    if (bounceCount >= 1) {
+      obj1.destroy();
+    } else {
+      obj1.setData("bounce", bounceCount + 1);
+    }
+  }
+
   private setAnims(name: string) {
     this.anims.create({
       key: "left",
@@ -169,95 +184,72 @@ export default class MainScene extends Phaser.Scene {
   }
 
   private previousDownTime: number = 0;
-  private handleAttackBomb(
-    direction: string,
-    cursors?: Phaser.Types.Input.Keyboard.CursorKeys,
-    player?: Phaser.Physics.Arcade.Sprite
-  ) {
-    if (cursors?.space && player) {
+
+  private handleAttackBomb(angle: number) {
+    if (this.cursors?.space && this.player) {
       let beam: Phaser.Physics.Arcade.Image = undefined;
 
-      if (Phaser.Input.Keyboard.JustDown(cursors.space)) {
-        if (cursors.space?.timeDown > this.previousDownTime + 1000) {
-          if (direction === "left") {
-            beam = this.beams?.create(player.x - 30, player.y, "beam");
-            beam.setVelocity(-400, 0);
-          }
-          if (direction === "left-up") {
-            beam = this.beams?.create(player.x - 30, player.y - 30, "beam");
-            beam.setVelocity(-400, -400);
-          }
-          if (direction === "left-down") {
-            beam = this.beams?.create(player.x - 30, player.y + 30, "beam");
-            beam.setVelocity(-400, 400);
-          }
-          if (direction === "right") {
-            beam = this.beams?.create(player.x + 30, player.y, "beam");
-            beam.setVelocity(400, 0);
-          }
-          if (direction === "right-up") {
-            beam = this.beams?.create(player.x + 30, player.y - 30, "beam");
-            beam.setVelocity(400, -400);
-          }
-          if (direction === "right-down") {
-            beam = this.beams?.create(player.x + 30, player.y + 30, "beam");
-            beam.setVelocity(400, 400);
-          }
-          if (direction === "up") {
-            beam = this.beams?.create(player.x, player.y - 30, "beam");
-            beam.setVelocity(0, -400);
-          }
-          if (direction === "down") {
-            beam = this.beams?.create(player.x, player.y + 30, "beam");
-            beam.setVelocity(0, 400);
-          }
-          if (beam !== undefined) {
-            beam.setBounce(1);
-          }
-          this.previousDownTime = cursors.space.timeDown;
+      if (
+        Phaser.Input.Keyboard.JustDown(this.cursors.space) &&
+        this.cursors.space?.timeDown > this.previousDownTime + 1000
+      ) {
+        let offsetX: number = 30 * Math.cos(angle);
+        let offsetY: number = -30 * Math.sin(angle);
+        let vX: number = 400 * Math.cos(angle);
+        let vY: number = -400 * Math.sin(angle);
+        beam = this.beams?.create(
+          this.player.x + offsetX,
+          this.player.y + offsetY,
+          "beam"
+        );
+        beam.setVelocity(vX, vY);
+
+        if (beam !== undefined) {
+          beam.setBounce(1);
+          beam.setData("bounce", 0);
         }
+        this.previousDownTime = this.cursors.space.timeDown;
       }
     }
   }
 
+  private direction: string = "down";
+  private angle: number = Math.PI;
   private handlePlayerDirection() {
     if (!this.cursors || !this.player) return;
+    let baseV: number = 100;
     if (this.cursors.left?.isDown && this.cursors.up?.isDown) {
-      this.player?.setVelocity(-150, -150);
-      this.player?.anims.play("left-up", true);
-      this.handleAttackBomb("left-up", this.cursors, this.player);
+      this.direction = "left-up";
+      this.angle = (Math.PI * 3) / 4;
     } else if (this.cursors.left?.isDown && this.cursors.down?.isDown) {
-      this.player?.setVelocity(-150, 150);
-      this.player?.anims.play("left-down", true);
-      this.handleAttackBomb("left-down", this.cursors, this.player);
+      this.direction = "left-down";
+      this.angle = (Math.PI * 5) / 4;
     } else if (this.cursors.left?.isDown) {
-      this.player?.setVelocity(-100, 0);
-      this.player?.anims.play("left", true);
-      this.handleAttackBomb("left", this.cursors, this.player);
+      this.direction = "left";
+      this.angle = Math.PI;
     } else if (this.cursors.right?.isDown && this.cursors.up?.isDown) {
-      this.player?.setVelocity(100, -100);
-      this.player?.anims.play("right-up", true);
-      this.handleAttackBomb("right-up", this.cursors, this.player);
+      this.direction = "right-up";
+      this.angle = (Math.PI * 1) / 4;
     } else if (this.cursors.right?.isDown && this.cursors.down?.isDown) {
-      this.player?.setVelocity(100, 100);
-      this.player?.anims.play("right-down", true);
-      this.handleAttackBomb("right-down", this.cursors, this.player);
+      this.direction = "right-down";
+      this.angle = (Math.PI * 7) / 4;
     } else if (this.cursors.right?.isDown) {
-      this.player?.setVelocity(100, 0);
-      this.player?.anims.play("right", true);
-      this.handleAttackBomb("right", this.cursors, this.player);
+      this.direction = "right";
+      this.angle = 0;
     } else if (this.cursors.up?.isDown) {
-      this.player?.setVelocityY(-100);
-      this.player?.anims.play("up");
-      this.handleAttackBomb("up", this.cursors, this.player);
+      this.direction = "up";
+      this.angle = (Math.PI * 2) / 4;
     } else if (this.cursors.down?.isDown) {
-      this.player?.setVelocityY(100);
-      this.player?.anims.play("down");
-      this.handleAttackBomb("down", this.cursors, this.player);
+      this.direction = "down";
+      this.angle = (Math.PI * 6) / 4;
     } else {
-      this.player?.setVelocityX(0);
-      this.player?.setVelocityY(0);
-      this.player?.anims.play("down");
+      baseV = 0;
     }
+    this.player?.setVelocity(
+      baseV * Math.cos(this.angle),
+      -1 * baseV * Math.sin(this.angle)
+    );
+    this.handleAttackBomb(this.angle);
+    this.player?.anims.play(this.direction, true);
   }
 }
