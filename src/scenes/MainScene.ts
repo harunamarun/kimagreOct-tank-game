@@ -59,7 +59,31 @@ export default class MainScene extends Phaser.Scene {
 
     /******************** set player ********************/
     this.player = this.physics.add.sprite(100, 300, "dude");
+    this.setAnims();
 
+    this.physics.add.collider(this.player, this.blocks);
+
+    /******************** set cursors ********************/
+    this.cursors = this.input.keyboard.createCursorKeys();
+
+    /******************** set beams ********************/
+    this.beams = this.physics.add.group();
+    this.physics.add.collider(this.beams, this.blocks);
+    this.physics.add.collider(
+      this.player,
+      this.beams,
+      this.handleHitbeam,
+      undefined,
+      this
+    );
+  }
+
+  update() {
+    this.handlePlayerDirection();
+  }
+
+  /******************** FUNCTIONS ********************/
+  private setAnims() {
     this.anims.create({
       key: "left",
       frames: this.anims.generateFrameNumbers("dude", { start: 0, end: 1 }),
@@ -108,31 +132,7 @@ export default class MainScene extends Phaser.Scene {
       frameRate: 10,
       repeat: -1,
     });
-
-    this.physics.add.collider(this.player, this.blocks);
-
-    /******************** set cursors ********************/
-    this.cursors = this.input.keyboard.createCursorKeys();
-
-    /******************** set beams ********************/
-    this.beams = this.physics.add.group();
-    this.physics.add.collider(this.beams, this.blocks);
-    this.physics.add.collider(
-      this.player,
-      this.beams,
-      this.handleHitbeam,
-      undefined,
-      this
-    );
   }
-
-  private previousDownTime: number = 0;
-
-  update() {
-    this.handlePlayerDirection();
-  }
-
-  /******************** FUNCTIONS ********************/
   private handleHitbeam(
     player: Phaser.GameObjects.GameObject,
     b: Phaser.GameObjects.GameObject
@@ -143,6 +143,7 @@ export default class MainScene extends Phaser.Scene {
     //    this.gameOver = true;
   }
 
+  private previousDownTime: number = 0;
   private handleAttackBomb(
     direction: string,
     cursors?: Phaser.Types.Input.Keyboard.CursorKeys,
