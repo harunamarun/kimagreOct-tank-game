@@ -77,7 +77,13 @@ export default class MainScene extends Phaser.Scene {
 
     /******************** set beams ********************/
     this.beams = this.physics.add.group();
-    this.physics.add.collider(this.beams, this.blocks);
+    this.physics.add.collider(
+      this.beams,
+      this.blocks,
+      this.countBounce,
+      undefined,
+      this
+    );
     this.physics.add.collider(
       this.player,
       this.beams,
@@ -99,6 +105,15 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /******************** FUNCTIONS ********************/
+  private countBounce(obj1, obj2) {
+    let bounceCount: number = obj1.getData("bounce");
+    if (bounceCount >= 1) {
+      obj1.destroy();
+    } else {
+      obj1.setData("bounce", bounceCount + 1);
+    }
+  }
+
   private setAnims(name: string) {
     this.anims.create({
       key: "left",
@@ -169,6 +184,7 @@ export default class MainScene extends Phaser.Scene {
   }
 
   private previousDownTime: number = 0;
+
   private handleAttackBomb(
     direction: string,
     cursors?: Phaser.Types.Input.Keyboard.CursorKeys,
@@ -177,45 +193,47 @@ export default class MainScene extends Phaser.Scene {
     if (cursors?.space && player) {
       let beam: Phaser.Physics.Arcade.Image = undefined;
 
-      if (Phaser.Input.Keyboard.JustDown(cursors.space)) {
-        if (cursors.space?.timeDown > this.previousDownTime + 1000) {
-          if (direction === "left") {
-            beam = this.beams?.create(player.x - 30, player.y, "beam");
-            beam.setVelocity(-400, 0);
-          }
-          if (direction === "left-up") {
-            beam = this.beams?.create(player.x - 30, player.y - 30, "beam");
-            beam.setVelocity(-400, -400);
-          }
-          if (direction === "left-down") {
-            beam = this.beams?.create(player.x - 30, player.y + 30, "beam");
-            beam.setVelocity(-400, 400);
-          }
-          if (direction === "right") {
-            beam = this.beams?.create(player.x + 30, player.y, "beam");
-            beam.setVelocity(400, 0);
-          }
-          if (direction === "right-up") {
-            beam = this.beams?.create(player.x + 30, player.y - 30, "beam");
-            beam.setVelocity(400, -400);
-          }
-          if (direction === "right-down") {
-            beam = this.beams?.create(player.x + 30, player.y + 30, "beam");
-            beam.setVelocity(400, 400);
-          }
-          if (direction === "up") {
-            beam = this.beams?.create(player.x, player.y - 30, "beam");
-            beam.setVelocity(0, -400);
-          }
-          if (direction === "down") {
-            beam = this.beams?.create(player.x, player.y + 30, "beam");
-            beam.setVelocity(0, 400);
-          }
-          if (beam !== undefined) {
-            beam.setBounce(1);
-          }
-          this.previousDownTime = cursors.space.timeDown;
+      if (
+        Phaser.Input.Keyboard.JustDown(cursors.space) &&
+        cursors.space?.timeDown > this.previousDownTime + 1000
+      ) {
+        if (direction === "left") {
+          beam = this.beams?.create(player.x - 30, player.y, "beam");
+          beam.setVelocity(-400, 0);
         }
+        if (direction === "left-up") {
+          beam = this.beams?.create(player.x - 30, player.y - 30, "beam");
+          beam.setVelocity(-400, -400);
+        }
+        if (direction === "left-down") {
+          beam = this.beams?.create(player.x - 30, player.y + 30, "beam");
+          beam.setVelocity(-400, 400);
+        }
+        if (direction === "right") {
+          beam = this.beams?.create(player.x + 30, player.y, "beam");
+          beam.setVelocity(400, 0);
+        }
+        if (direction === "right-up") {
+          beam = this.beams?.create(player.x + 30, player.y - 30, "beam");
+          beam.setVelocity(400, -400);
+        }
+        if (direction === "right-down") {
+          beam = this.beams?.create(player.x + 30, player.y + 30, "beam");
+          beam.setVelocity(400, 400);
+        }
+        if (direction === "up") {
+          beam = this.beams?.create(player.x, player.y - 30, "beam");
+          beam.setVelocity(0, -400);
+        }
+        if (direction === "down") {
+          beam = this.beams?.create(player.x, player.y + 30, "beam");
+          beam.setVelocity(0, 400);
+        }
+        if (beam !== undefined) {
+          beam.setBounce(1);
+          beam.setData("bounce", 0);
+        }
+        this.previousDownTime = cursors.space.timeDown;
       }
     }
   }
@@ -223,11 +241,11 @@ export default class MainScene extends Phaser.Scene {
   private handlePlayerDirection() {
     if (!this.cursors || !this.player) return;
     if (this.cursors.left?.isDown && this.cursors.up?.isDown) {
-      this.player?.setVelocity(-150, -150);
+      this.player?.setVelocity(-100, -100);
       this.player?.anims.play("left-up", true);
       this.handleAttackBomb("left-up", this.cursors, this.player);
     } else if (this.cursors.left?.isDown && this.cursors.down?.isDown) {
-      this.player?.setVelocity(-150, 150);
+      this.player?.setVelocity(-100, 100);
       this.player?.anims.play("left-down", true);
       this.handleAttackBomb("left-down", this.cursors, this.player);
     } else if (this.cursors.left?.isDown) {
