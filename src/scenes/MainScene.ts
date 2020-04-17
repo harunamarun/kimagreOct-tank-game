@@ -4,9 +4,12 @@ export default class MainScene extends Phaser.Scene {
   private blocks?: Phaser.Physics.Arcade.StaticGroup;
   private player?: Phaser.Physics.Arcade.Sprite;
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
+  private beams?: Phaser.Physics.Arcade.Group;
 
   constructor() {
-    super("main");
+    super({
+      key: "MainScene",
+    });
   }
 
   preload() {
@@ -16,6 +19,7 @@ export default class MainScene extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 48,
     });
+    this.load.image("beam", "assets/bomb.png");
   }
   create() {
     /******************** set course ********************/
@@ -58,18 +62,49 @@ export default class MainScene extends Phaser.Scene {
 
     this.anims.create({
       key: "left",
-      frames: this.anims.generateFrameNumbers("dude", { start: 0, end: 3 }),
+      frames: this.anims.generateFrameNumbers("dude", { start: 0, end: 1 }),
       frameRate: 10,
       repeat: -1,
     });
     this.anims.create({
-      key: "turn",
-      frames: [{ key: "dude", frame: 4 }],
-      frameRate: 20,
+      key: "left-up",
+      frames: this.anims.generateFrameNumbers("dude", { start: 2, end: 3 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "up",
+      frames: this.anims.generateFrameNumbers("dude", { start: 4, end: 5 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "right-up",
+      frames: this.anims.generateFrameNumbers("dude", { start: 6, end: 7 }),
+      frameRate: 10,
+      repeat: -1,
     });
     this.anims.create({
       key: "right",
-      frames: this.anims.generateFrameNumbers("dude", { start: 5, end: 8 }),
+      frames: this.anims.generateFrameNumbers("dude", { start: 8, end: 9 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "right-down",
+      frames: this.anims.generateFrameNumbers("dude", { start: 10, end: 11 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "down",
+      frames: this.anims.generateFrameNumbers("dude", { start: 12, end: 13 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "left-down",
+      frames: this.anims.generateFrameNumbers("dude", { start: 14, end: 15 }),
       frameRate: 10,
       repeat: -1,
     });
@@ -78,26 +113,125 @@ export default class MainScene extends Phaser.Scene {
 
     /******************** set cursors ********************/
     this.cursors = this.input.keyboard.createCursorKeys();
+
+    /******************** set beams ********************/
+    this.beams = this.physics.add.group();
+    this.physics.add.collider(this.beams, this.blocks);
+    this.physics.add.collider(
+      this.player,
+      this.beams,
+      this.handleHitbeam,
+      undefined,
+      this
+    );
   }
 
+  private previousDownTime: number = 0;
+
   update() {
-    if (!this.cursors) return;
-    if (this.cursors.left?.isDown) {
-      this.player?.setVelocityX(-180);
+    this.handlePlayerDirection();
+  }
+
+  /******************** FUNCTIONS ********************/
+  private handleHitbeam(
+    player: Phaser.GameObjects.GameObject,
+    b: Phaser.GameObjects.GameObject
+  ) {
+    this.physics.pause();
+    this.player?.setTint(0x000000);
+    this.player?.anims.play("turn");
+    //    this.gameOver = true;
+  }
+
+  private handleAttackBomb(
+    direction: string,
+    cursors?: Phaser.Types.Input.Keyboard.CursorKeys,
+    player?: Phaser.Physics.Arcade.Sprite
+  ) {
+    if (cursors?.space && player) {
+      let beam: Phaser.Physics.Arcade.Image = undefined;
+
+      if (Phaser.Input.Keyboard.JustDown(cursors.space)) {
+        if (cursors.space?.timeDown > this.previousDownTime + 1000) {
+          if (direction === "left") {
+            beam = this.beams?.create(player.x - 30, player.y, "beam");
+            beam.setVelocity(-400, 0);
+          }
+          if (direction === "left-up") {
+            beam = this.beams?.create(player.x - 30, player.y - 30, "beam");
+            beam.setVelocity(-400, -400);
+          }
+          if (direction === "left-down") {
+            beam = this.beams?.create(player.x - 30, player.y + 30, "beam");
+            beam.setVelocity(-400, 400);
+          }
+          if (direction === "right") {
+            beam = this.beams?.create(player.x + 30, player.y, "beam");
+            beam.setVelocity(400, 0);
+          }
+          if (direction === "right-up") {
+            beam = this.beams?.create(player.x + 30, player.y - 30, "beam");
+            beam.setVelocity(400, -400);
+          }
+          if (direction === "right-down") {
+            beam = this.beams?.create(player.x + 30, player.y + 30, "beam");
+            beam.setVelocity(400, 400);
+          }
+          if (direction === "up") {
+            beam = this.beams?.create(player.x, player.y - 30, "beam");
+            beam.setVelocity(0, -400);
+          }
+          if (direction === "down") {
+            beam = this.beams?.create(player.x, player.y + 30, "beam");
+            beam.setVelocity(0, 400);
+          }
+          if (beam !== undefined) {
+            beam.setBounce(1);
+          }
+          this.previousDownTime = cursors.space.timeDown;
+        }
+      }
+    }
+  }
+
+  private handlePlayerDirection() {
+    if (!this.cursors || !this.player) return;
+    if (this.cursors.left?.isDown && this.cursors.up?.isDown) {
+      this.player?.setVelocity(-150, -150);
+      this.player?.anims.play("left-up", true);
+      this.handleAttackBomb("left-up", this.cursors, this.player);
+    } else if (this.cursors.left?.isDown && this.cursors.down?.isDown) {
+      this.player?.setVelocity(-150, 150);
+      this.player?.anims.play("left-down", true);
+      this.handleAttackBomb("left-down", this.cursors, this.player);
+    } else if (this.cursors.left?.isDown) {
+      this.player?.setVelocity(-100, 0);
       this.player?.anims.play("left", true);
+      this.handleAttackBomb("left", this.cursors, this.player);
+    } else if (this.cursors.right?.isDown && this.cursors.up?.isDown) {
+      this.player?.setVelocity(100, -100);
+      this.player?.anims.play("right-up", true);
+      this.handleAttackBomb("right-up", this.cursors, this.player);
+    } else if (this.cursors.right?.isDown && this.cursors.down?.isDown) {
+      this.player?.setVelocity(100, 100);
+      this.player?.anims.play("right-down", true);
+      this.handleAttackBomb("right-down", this.cursors, this.player);
     } else if (this.cursors.right?.isDown) {
-      this.player?.setVelocityX(180);
+      this.player?.setVelocity(100, 0);
       this.player?.anims.play("right", true);
+      this.handleAttackBomb("right", this.cursors, this.player);
     } else if (this.cursors.up?.isDown) {
-      this.player?.setVelocityY(-180);
-      this.player?.anims.play("turn");
+      this.player?.setVelocityY(-100);
+      this.player?.anims.play("up");
+      this.handleAttackBomb("up", this.cursors, this.player);
     } else if (this.cursors.down?.isDown) {
-      this.player?.setVelocityY(180);
-      this.player?.anims.play("turn");
+      this.player?.setVelocityY(100);
+      this.player?.anims.play("down");
+      this.handleAttackBomb("down", this.cursors, this.player);
     } else {
       this.player?.setVelocityX(0);
       this.player?.setVelocityY(0);
-      this.player?.anims.play("turn");
+      this.player?.anims.play("down");
     }
   }
 }
