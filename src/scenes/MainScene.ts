@@ -5,7 +5,7 @@ export default class MainScene extends Phaser.Scene {
   private player?: Phaser.Physics.Arcade.Sprite;
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
   private beams?: Phaser.Physics.Arcade.Group;
-  private computer?: Phaser.Physics.Arcade.Sprite;
+  private computers?: Phaser.Physics.Arcade.Group;
   private finishedGame = false;
   private branks?: Phaser.Physics.Arcade.StaticGroup;
 
@@ -78,24 +78,41 @@ export default class MainScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.blocks);
 
     /******************** set computer ********************/
-    this.computer = this.physics.add.sprite(700, 300, "dude");
-    this.setAnims("dude");
-    this.moveCom();
+    this.computers = this.physics.add.group({
+      key: "computer",
+      repeat: 3,
+      setXY: { x: 700, y: 200, stepY: 70 },
+    });
+
+    this.computers.children.iterate((c) => {
+      const child = c as Phaser.Physics.Arcade.Image;
+      this.setAnims("dude");
+      this.moveCom(child);
+    });
     this.physics.add.collider(
-      this.computer,
+      this.computers,
       this.blocks,
       this.moveCom,
       undefined,
       this
     );
     this.physics.add.collider(
-      this.computer,
+      this.computers,
       this.branks,
       this.moveCom,
       undefined,
       this
     );
-
+    if (this.computers?.countActive(true) === 0) {
+      this.finishedGame = true;
+    }
+    this.physics.add.collider(
+      this.player,
+      this.computers,
+      this.gameOver,
+      undefined,
+      this
+    );
     /******************** set cursors ********************/
     this.cursors = this.input.keyboard.createCursorKeys();
 
@@ -116,7 +133,7 @@ export default class MainScene extends Phaser.Scene {
       this
     );
     this.physics.add.collider(
-      this.computer,
+      this.computers,
       this.beams,
       this.handleHitbeamToCom,
       undefined,
@@ -129,6 +146,10 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /******************** FUNCTIONS ********************/
+  private gameOver() {
+    this.finishedGame = true;
+  }
+
   private com = {
     left: Math.PI,
     "left-up": (Math.PI * 3) / 4,
@@ -139,16 +160,16 @@ export default class MainScene extends Phaser.Scene {
     up: (Math.PI * 2) / 4,
     down: (Math.PI * 6) / 4,
   };
-  private moveCom() {
-    if (!this.computer) return;
+  private moveCom(com) {
+    if (!com) return;
     let baseV: number = 100;
 
     let random = Math.floor(Math.random() * 8);
-    this.computer?.setVelocity(
+    com.setVelocity(
       baseV * Math.cos(this.com[Object.keys(this.com)[random]]),
       -1 * baseV * Math.sin(this.com[Object.keys(this.com)[random]])
     );
-    this.computer?.anims.play(Object.keys(this.com)[random], true);
+    com.anims.play(Object.keys(this.com)[random], true);
   }
 
   private countBounce(obj1, obj2) {
@@ -223,10 +244,9 @@ export default class MainScene extends Phaser.Scene {
     computer: Phaser.GameObjects.GameObject,
     b: Phaser.GameObjects.GameObject
   ) {
-    this.physics.pause();
-    this.computer?.setTint(0x000000);
-    this.computer?.anims.play("down");
-    this.finishedGame = true;
+    const com = computer as Phaser.Physics.Arcade.Image;
+    com.disableBody(true, false);
+    com.setTint(0x000000);
   }
 
   private previousDownTime: number = 0;
