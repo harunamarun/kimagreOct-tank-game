@@ -80,42 +80,6 @@ export default class MainScene extends Phaser.Scene {
 
     this.physics.add.collider(this.player, this.blocks);
 
-    /******************** set computer ********************/
-    this.computers = this.physics.add.group({
-      key: "computer",
-      repeat: 3,
-      setXY: { x: 700, y: 300 },
-    });
-
-    this.computers.children.iterate((c) => {
-      const child = c as Phaser.Physics.Arcade.Image;
-      this.setAnims("dude");
-      this.moveCom(child);
-    });
-    this.physics.add.collider(
-      this.computers,
-      this.blocks,
-      this.moveCom,
-      undefined,
-      this
-    );
-    this.physics.add.collider(
-      this.computers,
-      this.branks,
-      this.moveCom,
-      undefined,
-      this
-    );
-    if (this.computers?.countActive(true) === 0) {
-      this.finishedGame = true;
-    }
-    this.physics.add.collider(
-      this.player,
-      this.computers,
-      this.gameOver,
-      undefined,
-      this
-    );
     /******************** set cursors ********************/
     this.cursors = this.input.keyboard.createCursorKeys();
 
@@ -135,13 +99,10 @@ export default class MainScene extends Phaser.Scene {
       undefined,
       this
     );
-    this.physics.add.collider(
-      this.computers,
-      this.beams,
-      this.handleHitbeamToCom,
-      undefined,
-      this
-    );
+
+    /******************** set computer ********************/
+    this.setComputers();
+
     /******************** set score ********************/
     this.scoreText = this.add.text(10, 10, "score:0", {
       color: "#fff",
@@ -168,6 +129,49 @@ export default class MainScene extends Phaser.Scene {
   /******************** FUNCTIONS ********************/
   private gameOver() {
     this.finishedGame = true;
+  }
+  private enemyNum: number = 3;
+  private setComputers() {
+    this.computers = this.physics.add.group({
+      key: "computer",
+      repeat: this.enemyNum,
+      setXY: { x: 700, y: 300 },
+    });
+
+    this.computers.children.iterate((c) => {
+      const child = c as Phaser.Physics.Arcade.Image;
+      this.setAnims("dude");
+      this.moveCom(child);
+    });
+
+    this.physics.add.collider(
+      this.computers,
+      this.blocks,
+      this.moveCom,
+      undefined,
+      this
+    );
+    this.physics.add.collider(
+      this.computers,
+      this.branks,
+      this.moveCom,
+      undefined,
+      this
+    );
+    this.physics.add.collider(
+      this.player,
+      this.computers,
+      this.gameOver,
+      undefined,
+      this
+    );
+    this.physics.add.collider(
+      this.computers,
+      this.beams,
+      this.handleHitbeamToCom,
+      undefined,
+      this
+    );
   }
 
   private com = {
@@ -269,6 +273,11 @@ export default class MainScene extends Phaser.Scene {
     com.setTint(0x000000);
     this.score += 1;
     this.scoreText?.setText(`Score: ${this.score}`);
+    if (this.computers?.countActive(true) === 0) {
+      console.log("active: 0");
+      this.enemyNum++;
+      this.setComputers();
+    }
   }
 
   private previousDownTime: number = 0;
