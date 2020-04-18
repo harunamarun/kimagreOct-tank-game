@@ -7,6 +7,7 @@ export default class MainScene extends Phaser.Scene {
   private beams?: Phaser.Physics.Arcade.Group;
   private computer?: Phaser.Physics.Arcade.Sprite;
   private finishedGame = false;
+  private branks?: Phaser.Physics.Arcade.StaticGroup;
 
   constructor() {
     super({
@@ -59,6 +60,16 @@ export default class MainScene extends Phaser.Scene {
       this.blocks.create(x + 280, 600 - 120, "block");
       x += 32;
     }
+    //set com's course
+    this.branks = this.physics.add.staticGroup();
+    for (let i = 0; i < 20; i++) {
+      this.branks
+        .create(0, 0, "block", undefined, false, true)
+        .setScale(1)
+        .setRandomPosition()
+
+        .refreshBody();
+    }
 
     /******************** set player ********************/
     this.player = this.physics.add.sprite(100, 300, "dude");
@@ -68,9 +79,22 @@ export default class MainScene extends Phaser.Scene {
 
     /******************** set computer ********************/
     this.computer = this.physics.add.sprite(700, 300, "dude");
-    //this.setAnims("dude");
-
-    this.physics.add.collider(this.computer, this.blocks);
+    this.setAnims("dude");
+    this.moveCom();
+    this.physics.add.collider(
+      this.computer,
+      this.blocks,
+      this.moveCom,
+      undefined,
+      this
+    );
+    this.physics.add.collider(
+      this.computer,
+      this.branks,
+      this.moveCom,
+      undefined,
+      this
+    );
 
     /******************** set cursors ********************/
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -105,6 +129,28 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /******************** FUNCTIONS ********************/
+  private com = {
+    left: Math.PI,
+    "left-up": (Math.PI * 3) / 4,
+    "left-down": (Math.PI * 5) / 4,
+    right: 0,
+    "right-up": (Math.PI * 1) / 4,
+    "right-down": (Math.PI * 7) / 4,
+    up: (Math.PI * 2) / 4,
+    down: (Math.PI * 6) / 4,
+  };
+  private moveCom() {
+    if (!this.computer) return;
+    let baseV: number = 100;
+
+    let random = Math.floor(Math.random() * 8);
+    this.computer?.setVelocity(
+      baseV * Math.cos(this.com[Object.keys(this.com)[random]]),
+      -1 * baseV * Math.sin(this.com[Object.keys(this.com)[random]])
+    );
+    this.computer?.anims.play(Object.keys(this.com)[random], true);
+  }
+
   private countBounce(obj1, obj2) {
     let bounceCount: number = obj1.getData("bounce");
     if (bounceCount >= 1) {
