@@ -213,44 +213,43 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
+  private direction: string = "down";
+  private angle: number = Math.PI;
   private handlePlayerDirection() {
     if (!this.cursors || !this.player) return;
     let baseV: number = 100;
-    let angle: number = Math.PI;
-    let direction: string;
     if (this.cursors.left?.isDown && this.cursors.up?.isDown) {
-      direction = "left-up";
-      angle = (Math.PI * 3) / 4;
+      this.direction = "left-up";
+      this.angle = (Math.PI * 3) / 4;
     } else if (this.cursors.left?.isDown && this.cursors.down?.isDown) {
-      direction = "left-down";
-      angle = (Math.PI * 5) / 4;
+      this.direction = "left-down";
+      this.angle = (Math.PI * 5) / 4;
     } else if (this.cursors.left?.isDown) {
-      direction = "left";
-      angle = Math.PI;
+      this.direction = "left";
+      this.angle = Math.PI;
     } else if (this.cursors.right?.isDown && this.cursors.up?.isDown) {
-      direction = "right-up";
-      angle = (Math.PI * 1) / 4;
+      this.direction = "right-up";
+      this.angle = (Math.PI * 1) / 4;
     } else if (this.cursors.right?.isDown && this.cursors.down?.isDown) {
-      direction = "right-down";
-      angle = (Math.PI * 7) / 4;
+      this.direction = "right-down";
+      this.angle = (Math.PI * 7) / 4;
     } else if (this.cursors.right?.isDown) {
-      direction = "right";
-      angle = 0;
+      this.direction = "right";
+      this.angle = 0;
     } else if (this.cursors.up?.isDown) {
-      direction = "up";
-      angle = (Math.PI * 2) / 4;
+      this.direction = "up";
+      this.angle = (Math.PI * 2) / 4;
     } else if (this.cursors.down?.isDown) {
-      direction = "down";
-      angle = (Math.PI * 6) / 4;
+      this.direction = "down";
+      this.angle = (Math.PI * 6) / 4;
     } else {
       baseV = 0;
-      direction = "down";
     }
     this.player?.setVelocity(
-      baseV * Math.cos(angle),
-      -1 * baseV * Math.sin(angle)
+      baseV * Math.cos(this.angle),
+      -1 * baseV * Math.sin(this.angle)
     );
-    this.handleAttackBomb(angle);
-    this.player?.anims.play(direction, true);
+    this.handleAttackBomb(this.angle);
+    this.player?.anims.play(this.direction, true);
   }
 }
