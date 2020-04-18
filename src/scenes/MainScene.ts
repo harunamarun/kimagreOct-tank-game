@@ -8,6 +8,9 @@ export default class MainScene extends Phaser.Scene {
   private computers?: Phaser.Physics.Arcade.Group;
   private finishedGame = false;
   private branks?: Phaser.Physics.Arcade.StaticGroup;
+  private score = 0;
+  private scoreText?: Phaser.GameObjects.Text;
+  private gameOverText?: Phaser.GameObjects.Text;
 
   constructor() {
     super({
@@ -81,7 +84,7 @@ export default class MainScene extends Phaser.Scene {
     this.computers = this.physics.add.group({
       key: "computer",
       repeat: 3,
-      setXY: { x: 700, y: 200, stepY: 70 },
+      setXY: { x: 700, y: 300 },
     });
 
     this.computers.children.iterate((c) => {
@@ -139,10 +142,27 @@ export default class MainScene extends Phaser.Scene {
       undefined,
       this
     );
+    /******************** set score ********************/
+    this.scoreText = this.add.text(10, 10, "score:0", {
+      color: "#fff",
+    });
   }
 
   update() {
     this.handlePlayerDirection();
+    if (this.finishedGame) {
+      this.player?.disableBody(true, true);
+      this.add.image(400, 300, "ground");
+      this.gameOverText = this.add.text(
+        30,
+        400,
+        `GAME OVER: ${this.score}point`,
+        {
+          color: "#fff",
+          fontSize: "64px",
+        }
+      );
+    }
   }
 
   /******************** FUNCTIONS ********************/
@@ -169,7 +189,7 @@ export default class MainScene extends Phaser.Scene {
       baseV * Math.cos(this.com[Object.keys(this.com)[random]]),
       -1 * baseV * Math.sin(this.com[Object.keys(this.com)[random]])
     );
-    com.anims.play(Object.keys(this.com)[random], true);
+    com.anims.play(Object.keys(this.com)[random]);
   }
 
   private countBounce(obj1, obj2) {
@@ -247,6 +267,8 @@ export default class MainScene extends Phaser.Scene {
     const com = computer as Phaser.Physics.Arcade.Image;
     com.disableBody(true, false);
     com.setTint(0x000000);
+    this.score += 1;
+    this.scoreText?.setText(`Score: ${this.score}`);
   }
 
   private previousDownTime: number = 0;
@@ -261,8 +283,8 @@ export default class MainScene extends Phaser.Scene {
       ) {
         let offsetX: number = 30 * Math.cos(angle);
         let offsetY: number = -30 * Math.sin(angle);
-        let vX: number = 400 * Math.cos(angle);
-        let vY: number = -400 * Math.sin(angle);
+        let vX: number = 550 * Math.cos(angle);
+        let vY: number = -550 * Math.sin(angle);
         beam = this.beams?.create(
           this.player.x + offsetX,
           this.player.y + offsetY,
