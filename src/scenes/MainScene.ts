@@ -26,6 +26,10 @@ export default class MainScene extends Phaser.Scene {
       frameHeight: 48,
     });
     this.load.image("beam", "assets/bomb.png");
+    this.load.spritesheet("dude2", "assets/dude2.png", {
+      frameWidth: 32,
+      frameHeight: 48,
+    });
   }
 
   create() {
@@ -140,7 +144,7 @@ export default class MainScene extends Phaser.Scene {
 
     this.computers.children.iterate((c) => {
       const child = c as Phaser.Physics.Arcade.Image;
-      this.setAnims("dude");
+      this.setAnims("dude2");
       this.moveCom(child);
     });
 
@@ -193,7 +197,7 @@ export default class MainScene extends Phaser.Scene {
       baseV * Math.cos(this.com[Object.keys(this.com)[random]]),
       -1 * baseV * Math.sin(this.com[Object.keys(this.com)[random]])
     );
-    com.anims.play(Object.keys(this.com)[random]);
+    com.anims.play("dude2" + Object.keys(this.com)[random]);
   }
 
   private countBounce(obj1, obj2) {
@@ -207,51 +211,51 @@ export default class MainScene extends Phaser.Scene {
 
   private setAnims(name: string) {
     this.anims.create({
-      key: "left",
+      key: name + "left",
       frames: this.anims.generateFrameNumbers(name, { start: 0, end: 1 }),
-      frameRate: 10,
+      frameRate: 9,
       repeat: -1,
     });
     this.anims.create({
-      key: "left-up",
+      key: name + "left-up",
       frames: this.anims.generateFrameNumbers(name, { start: 2, end: 3 }),
-      frameRate: 10,
+      frameRate: 9,
       repeat: -1,
     });
     this.anims.create({
-      key: "up",
+      key: name + "up",
       frames: this.anims.generateFrameNumbers(name, { start: 4, end: 5 }),
-      frameRate: 10,
+      frameRate: 9,
       repeat: -1,
     });
     this.anims.create({
-      key: "right-up",
+      key: name + "right-up",
       frames: this.anims.generateFrameNumbers(name, { start: 6, end: 7 }),
-      frameRate: 10,
+      frameRate: 9,
       repeat: -1,
     });
     this.anims.create({
-      key: "right",
+      key: name + "right",
       frames: this.anims.generateFrameNumbers(name, { start: 8, end: 9 }),
-      frameRate: 10,
+      frameRate: 9,
       repeat: -1,
     });
     this.anims.create({
-      key: "right-down",
+      key: name + "right-down",
       frames: this.anims.generateFrameNumbers(name, { start: 10, end: 11 }),
-      frameRate: 10,
+      frameRate: 9,
       repeat: -1,
     });
     this.anims.create({
-      key: "down",
+      key: name + "down",
       frames: this.anims.generateFrameNumbers(name, { start: 12, end: 13 }),
-      frameRate: 10,
+      frameRate: 9,
       repeat: -1,
     });
     this.anims.create({
-      key: "left-down",
+      key: name + "left-down",
       frames: this.anims.generateFrameNumbers(name, { start: 14, end: 15 }),
-      frameRate: 10,
+      frameRate: 9,
       repeat: -1,
     });
   }
@@ -347,6 +351,6 @@ export default class MainScene extends Phaser.Scene {
       -1 * baseV * Math.sin(this.angle)
     );
     this.handleAttackBomb(this.angle);
-    this.player?.anims.play(this.direction, true);
+    this.player?.anims.play("dude" + this.direction, true);
   }
 }
