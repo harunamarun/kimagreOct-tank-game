@@ -277,6 +277,7 @@ export default class MainScene extends Phaser.Scene {
     com.setTint(0x000000);
     this.score += 1;
     this.scoreText?.setText(`Score: ${this.score}`);
+    b.destroy();
     if (this.computers?.countActive(true) === 0) {
       console.log("active: 0");
       this.enemyNum++;
